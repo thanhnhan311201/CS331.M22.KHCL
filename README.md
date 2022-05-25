@@ -14,3 +14,29 @@
 * **Mã lớp:** CS331.M22.KHCL
 * **Năm học:** HK2 (2021 - 2022)
 * **Giảng viên**: Mai Tiến Dũng
+
+# Hướng dẫn chạy
+
+## Xây dựng database
+
+Chạy đoạn code sau đây để xây dựng database.
+
+```bash
+python3 demo.py models/83_epochs/ --option index --dataset_path datasets/
+```
+
+## Chạy demo với ảnh
+
+Chạy đoạn code sau đây để chạy demo với ảnh.
+
+```bash
+python3 demo.py models/83_epochs/ --dataset_path datasets/ --option demo_via_img --image_file your_image_file
+```
+
+## Chạy demo với camera
+
+Chạy đoạn code sau đây để chạy demo với camera.
+
+```bash
+python3 demo.py models/83_epochs/ --dataset_path datasets/ --option demo_via_cam
+```

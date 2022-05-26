@@ -9,7 +9,7 @@ except:
 def parse_arguments(argv):
     parser = argparse.ArgumentParser()
     
-    parser.add_argument('model', type=str, help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file', default='/models/83_epochs/')
+    parser.add_argument('model', type=str, help='Could be either a directory containing the meta_file and ckpt_file or a model protobuf (.pb) file', default='models/83_epochs/')
     parser.add_argument('--option', type=str, help='Could be `index` or `demo_via_img` or `demo_via_cam`', default='demo_via_img')
     parser.add_argument('--dataset_path', type=str, help='Path to the dataset.', default='datasets/')
     parser.add_argument('--image_file', type=str, nargs='+', help='Images to demo with.')

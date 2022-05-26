@@ -8,6 +8,12 @@ import time
 import glob
 from tqdm import tqdm
 import json
+import tensorflow as tf
+
+try:
+    import facenet
+except:
+    from src import facenet
 
 try:
     import feature_extractor
@@ -33,26 +39,38 @@ class face_recognition_system:
             os.mkdir(self.feature_folder_path)
 
     def index_dataset(self):
-        for img_path in tqdm(os.listdir(self.image_folder)):
-            name = img_path.split('.')[0]
-            vector_file = f'{self.feature_folder_path}/{name}.pkl'
-            
-            img_path_full = os.path.join(self.image_folder + img_path)
-            img = cv2.imread(img_path_full)
+        with tf.Graph().as_default():
+            with tf.Session() as sess:
 
-            bbox = self.detector.detect(img)
-            if bbox is None:
-                return 0
+                facenet.load_model(self.model_path)
+                images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+                embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+                phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
 
-            x_min, y_min, x_max, y_max = bbox
-            PIL_image = Image.open(img_path_full).crop((x_min, y_min, x_max, y_max))
-                
-            try:
-                feature_vector = self.extractor.extract(PIL_image)
-            except:
-                continue
+                for img_path in tqdm(os.listdir(self.image_folder)):
 
-            pickle.dump(feature_vector, open(vector_file, "wb"))
+
+                    name = img_path.split('.')[0]
+                    vector_file = f'{self.feature_folder_path}/{name}.pkl'
+                    
+                    img_path_full = os.path.join(self.image_folder + img_path)
+                    img = cv2.imread(img_path_full)
+
+                    bbox = self.detector.detect(img)
+                    if bbox is None:
+                        return 0
+
+                    x_min, y_min, x_max, y_max = bbox
+                    cropped = img[y_min:y_max, x_min:x_max]
+                    # PIL_image = Image.open(img_path_full).crop((x_min, y_min, x_max, y_max))
+                        
+                    try:
+                        feed_dict = { images_placeholder: cropped, phase_train_placeholder:False }
+                        emb = self.sess.run(embeddings, feed_dict=feed_dict)
+                    except:
+                        continue
+
+                    pickle.dump(emb, open(vector_file, "wb"))
 
         return 'Done!'
 
@@ -86,7 +104,7 @@ class face_recognition_system:
 
     def recognize_face_via_image(self, img):
         if isinstance(img, str):
-            PIL_img = Image.open(img)
+            # PIL_img = Image.open(img)
             img = cv2.imread(img)
 
         bbox = self.detector.detect(img)
@@ -96,10 +114,11 @@ class face_recognition_system:
         res_dict = {}
 
         x_min, y_min, x_max, y_max = bbox
-        processed_img = PIL_img.crop((x_min, y_min, x_max, y_max))
+        cropped = img[y_min:y_max, x_min:x_max]
+        # processed_img = PIL_img.crop((x_min, y_min, x_max, y_max))
         res_img = cv2.rectangle(img, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
-        result = self.verify_face(processed_img)
+        result = self.verify_face(cropped)
         if result == "Unknown":
             face_name = "Unknown"
             cv2.putText(res_img, face_name, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -142,10 +161,11 @@ class face_recognition_system:
                 continue
 
             x_min, y_min, x_max, y_max = bbox
-            processed_frame = Image.fromarray(np.uint8(frame[y_min:y_max, x_min:x_max])).convert('RGB')
+            cropped = ret[y_min:y_max, x_min:x_max]
+            # processed_frame = Image.fromarray(np.uint8(frame[y_min:y_max, x_min:x_max])).convert('RGB')
             res_frame = cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
 
-            result = self.verify_face(processed_frame)
+            result = self.verify_face(cropped)
             if result == "Unknown":
                 face_name = "Unknown"
                 cv2.putText(res_frame, face_name, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)

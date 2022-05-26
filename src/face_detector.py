@@ -2,11 +2,11 @@ import cv2
 
 class FaceDetector:
     def __init__(self):
-        self.detector = cv2.CascadeClassifier(cv2.data.haarcascades + "src/haarcascade_frontalface_default.xml")
+        self.detector = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
     def detect(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        bbox = self.detector.detectMultiScale(gray, 1.1, 15)
+        bbox = self.detector.detectMultiScale(gray, 1.1, 15)[0]
 
         if len(bbox) == 0:
             return None

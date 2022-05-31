@@ -24,7 +24,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import numpy as np
 
 try:
@@ -34,22 +35,19 @@ except:
 
 class facenet_FE:
     def __init__(self, model_path):
-        self.Graph = tf.Graph()
-        self.sess = tf.Session()
         self.model_path = model_path
 
     def extract(self, img):
-        with self.Graph.as_default():
-            facenet.load_model(self.model_path)
+        with tf.Graph().as_default():
+            with tf.Session() as sess:
+                facenet.load_model(self.model_path)
 
-            # Get input and output tensors
-            images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
-            embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
-            phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
-            # Run forward pass to calculate embeddings
-            feed_dict = { images_placeholder: img, phase_train_placeholder:False }
-            emb = self.sess.run(embeddings, feed_dict=feed_dict)
-            
-            self.sess.close()
+                # Get input and output tensors
+                images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
+                embeddings = tf.get_default_graph().get_tensor_by_name("embeddings:0")
+                phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
+                # Run forward pass to calculate embeddings
+                feed_dict = { images_placeholder: img, phase_train_placeholder:False }
+                emb = sess.run(embeddings, feed_dict=feed_dict)
 
         return emb
